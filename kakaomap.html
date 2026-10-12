@@ -6,18 +6,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>응급 의료 지도</title>
 
-  <!-- 카카오 JavaScript 키 입력 -->
   <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=dbebb8cfdf21e6d5fe4adcd94d3a027f&libraries=services"></script>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
       font-family: Arial, "Malgun Gothic", sans-serif;
-      color: #24372f;
+      color: #26382f;
       background: #f3f7f4;
     }
 
@@ -38,13 +35,22 @@
       line-height: 1.6;
     }
 
-    .toolbar {
+    .search-area {
       display: flex;
-      flex-wrap: wrap;
-      gap: 9px;
-      padding: 14px 18px;
+      gap: 8px;
+      padding: 15px 18px;
       background: white;
-      border-bottom: 1px solid #dfe8e1;
+      border-bottom: 1px solid #e0e8e2;
+    }
+
+    .search-area input {
+      flex: 1;
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid #d4e1d8;
+      border-radius: 9px;
+      font-size: 14px;
+      outline-color: #176b52;
     }
 
     button {
@@ -55,20 +61,34 @@
       color: #315747;
       font-size: 14px;
       cursor: pointer;
-      transition: background 0.2s, color 0.2s;
     }
 
-    button:hover {
-      background: #eaf4ed;
-    }
+    button:hover { background: #eaf4ed; }
 
-    button.active {
+    .search-button {
       color: white;
       background: #176b52;
       border-color: #176b52;
     }
 
-    #pharmacyBtn.active {
+    .search-button:hover { background: #10553f; }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      padding: 12px 18px;
+      background: white;
+      border-bottom: 1px solid #e0e8e2;
+    }
+
+    .toolbar button.active {
+      color: white;
+      background: #176b52;
+      border-color: #176b52;
+    }
+
+    .toolbar #pharmacyBtn.active {
       background: #3476cf;
       border-color: #3476cf;
     }
@@ -78,8 +98,8 @@
       grid-template-columns: 340px minmax(0, 1fr);
       gap: 15px;
       padding: 15px;
-      height: calc(100vh - 135px);
-      min-height: 480px;
+      height: calc(100vh - 205px);
+      min-height: 440px;
     }
 
     .sidebar {
@@ -123,9 +143,7 @@
       border-radius: 9px;
     }
 
-    .place-item:hover {
-      border-color: #cfe2d4;
-    }
+    .place-item:hover { border-color: #cfe2d4; }
 
     .place-item strong {
       display: block;
@@ -209,9 +227,7 @@
         grid-row: 1;
       }
 
-      .sidebar {
-        height: 350px;
-      }
+      .sidebar { height: 350px; }
     }
   </style>
 </head>
@@ -219,8 +235,18 @@
 <body>
   <header>
     <h1>🩺 응급 의료 지도</h1>
-    <p>현재 위치 주변의 병원과 약국을 확인하고 교통정보를 살펴보세요.</p>
+    <p>진료과나 의료기관 이름을 검색하고 주변 의료기관을 확인하세요.</p>
   </header>
+
+  <form id="searchForm" class="search-area">
+    <input
+      id="searchInput"
+      type="search"
+      placeholder="예: 내과, 치과, 세브란스병원"
+      autocomplete="off"
+    >
+    <button class="search-button" type="submit">검색</button>
+  </form>
 
   <nav class="toolbar">
     <button id="hospitalBtn" class="active"
@@ -233,9 +259,7 @@
       💊 약국
     </button>
 
-    <button onclick="moveToMyLocation()">
-      📍 내 위치
-    </button>
+    <button onclick="moveToMyLocation()">📍 내 위치</button>
 
     <button id="trafficBtn" onclick="toggleTraffic()">
       🚦 교통정보 켜기
@@ -254,35 +278,29 @@
     <section class="map-wrap">
       <div id="map"></div>
       <div class="map-note">
-        마커를 누르면 장소 정보와 카카오맵 링크를 확인할 수 있어요.
+        마커를 선택하면 주소와 상세 정보를 확인할 수 있어요.
         응급실 운영 여부는 별도로 확인해야 합니다.
       </div>
     </section>
   </main>
 
   <script>
-    // 카테고리 코드
+    // 탭별 카테고리 코드
     const CATEGORY_CODES = {
       hospital: "HP8",
       pharmacy: "PM9"
     };
 
-    // 현재 상태
     let currentCategory = "hospital";
     let userPosition = null;
     let trafficEnabled = false;
     let searchVersion = 0;
-
     let markers = [];
-    let infoWindow;
 
-    // 위치를 가져오지 못했을 때 사용할 기본 위치: 서울시청
     const defaultPosition = new kakao.maps.LatLng(
-      37.5665,
-      126.9780
+      37.5665, 126.9780
     );
 
-    // 지도 초기화
     const map = new kakao.maps.Map(
       document.getElementById("map"),
       {
@@ -293,20 +311,28 @@
 
     const placesService = new kakao.maps.services.Places(map);
 
-    infoWindow = new kakao.maps.InfoWindow({
+    const infoWindow = new kakao.maps.InfoWindow({
       zIndex: 10
     });
 
-    // 페이지 시작 시 현재 위치 확인
+    // 검색창 제출: Enter 또는 검색 버튼
+    document.getElementById("searchForm").addEventListener(
+      "submit",
+      function(event) {
+        event.preventDefault();
+        searchPlaces();
+      }
+    );
+
+    // 처음에는 현재 위치를 기준으로 검색
     requestCurrentLocation();
 
-    // 현재 위치 요청
     function requestCurrentLocation() {
       setStatus("현재 위치를 확인하고 있습니다.");
 
       if (!navigator.geolocation) {
-        setStatus("위치 기능을 지원하지 않아 서울시청을 기준으로 검색합니다.");
-        searchNearbyPlaces();
+        setStatus("위치 기능을 사용할 수 없어 서울시청을 기준으로 검색합니다.");
+        searchPlaces();
         return;
       }
 
@@ -319,18 +345,13 @@
 
           map.setCenter(userPosition);
           map.setLevel(5);
-
-          searchNearbyPlaces();
+          searchPlaces();
         },
         function(error) {
           console.warn("위치 확인 실패:", error);
-
-          setStatus(
-            "현재 위치를 가져오지 못해 서울시청을 기준으로 검색합니다."
-          );
-
           map.setCenter(defaultPosition);
-          searchNearbyPlaces();
+          setStatus("현재 위치를 가져오지 못해 서울시청을 기준으로 검색합니다.");
+          searchPlaces();
         },
         {
           enableHighAccuracy: true,
@@ -340,65 +361,98 @@
       );
     }
 
-    // 현재 위치 주변 병원 또는 약국 검색
-    function searchNearbyPlaces() {
+    // 검색어가 있으면 키워드 검색 후 카테고리로 필터링.
+    // 검색어가 없으면 해당 카테고리 주변 검색.
+    function searchPlaces() {
       const version = ++searchVersion;
+      const query = document.getElementById("searchInput")
+        .value.trim();
 
-      const center = userPosition || map.getCenter();
+      const center = map.getCenter();
       const categoryCode = CATEGORY_CODES[currentCategory];
-
       const categoryName =
         currentCategory === "hospital" ? "병원" : "약국";
 
       clearMarkers();
-
       document.getElementById("results").innerHTML = "";
       document.getElementById("listTitle").textContent =
-        "주변 " + categoryName;
+        query ? "'" + query + "' 검색 결과" : "주변 " + categoryName;
 
-      setStatus(categoryName + "을(를) 검색하고 있습니다...");
+      setStatus("검색 중입니다...");
 
-      // 핵심: 선택한 탭에 해당하는 카테고리 코드만 검색
-      placesService.categorySearch(
-        categoryCode,
-        function(data, status, pagination) {
-          // 이전 검색의 응답은 표시하지 않음
-          if (version !== searchVersion) return;
+      const options = {
+        location: center,
+        radius: 10000,
+        sort: kakao.maps.services.SortBy.DISTANCE,
+        size: 15
+      };
 
-          if (status === kakao.maps.services.Status.OK) {
-            console.log(
-              categoryName + " 카테고리 코드:",
-              categoryCode
-            );
-            console.log("검색 결과:", data);
+      if (query) {
+        // 진료과나 기관명 검색
+        placesService.keywordSearch(
+          query,
+          function(data, status, pagination) {
+            if (version !== searchVersion) return;
 
-            displayPlaces(data, version);
+            if (status === kakao.maps.services.Status.OK) {
+              // 검색 결과에서 선택한 카테고리만 남김
+              const filtered = data.filter(function(place) {
+                return place.category_group_code === categoryCode;
+              });
 
-            setStatus(
-              "검색 결과 " + data.length + "곳 · 반경 약 10km"
-            );
-          } else if (
-            status === kakao.maps.services.Status.ZERO_RESULT
-          ) {
-            setStatus(
-              "주변 10km에서 검색 결과를 찾지 못했습니다."
-            );
-          } else {
-            console.error("카테고리 검색 실패:", status);
+              console.log("검색어:", query);
+              console.log("선택 카테고리:", categoryCode);
+              console.log("원본 결과:", data);
+              console.log("필터링 결과:", filtered);
 
-            setStatus(
-              "검색에 실패했습니다. API 키와 사이트 등록 설정을 확인해 주세요."
-            );
-          }
-        },
-        {
-          location: center,
-          radius: 10000,
-          sort: kakao.maps.services.SortBy.DISTANCE,
-          size: 15,
-          page: 1
-        }
-      );
+              displayPlaces(filtered, version);
+
+              if (filtered.length === 0) {
+                setStatus(
+                  "검색 결과에서 해당 카테고리의 장소를 찾지 못했습니다. 다른 검색어를 입력해 보세요."
+                );
+              } else {
+                setStatus(
+                  categoryName + " 검색 결과 " +
+                  filtered.length + "곳 · 반경 약 10km"
+                );
+              }
+            } else if (
+              status === kakao.maps.services.Status.ZERO_RESULT
+            ) {
+              setStatus("검색 결과가 없습니다. 다른 검색어를 입력해 보세요.");
+            } else {
+              console.error("키워드 검색 오류:", status);
+              setStatus("검색에 실패했습니다. API 설정을 확인해 주세요.");
+            }
+          },
+          options
+        );
+      } else {
+        // 검색어가 비어 있으면 카테고리별 주변 검색
+        placesService.categorySearch(
+          categoryCode,
+          function(data, status, pagination) {
+            if (version !== searchVersion) return;
+
+            if (status === kakao.maps.services.Status.OK) {
+              displayPlaces(data, version);
+              setStatus(
+                "주변 " + categoryName + " " +
+                data.length + "곳 · 반경 약 10km"
+              );
+            } else if (
+              status === kakao.maps.services.Status.ZERO_RESULT
+            ) {
+              setStatus("주변에서 검색 결과를 찾지 못했습니다.");
+            } else {
+              console.error("카테고리 검색 오류:", status);
+              setStatus("검색에 실패했습니다. API 설정을 확인해 주세요.");
+            }
+          },
+          options
+        );
+      }
     }
 
     // 지도 마커와 목록 생성
@@ -423,7 +477,6 @@
           title: place.place_name
         });
 
-        // 병원과 약국을 색상으로 구분
         const svg = `
           <svg xmlns="http://www.w3.org/2000/svg"
                width="36" height="36" viewBox="0 0 36 36">
@@ -443,9 +496,7 @@
             "data:image/svg+xml;charset=utf-8," +
               encodeURIComponent(svg),
             new kakao.maps.Size(36, 36),
-            {
-              offset: new kakao.maps.Point(18, 18)
-            }
+            { offset: new kakao.maps.Point(18, 18) }
           )
         );
 
@@ -455,7 +506,6 @@
           showPlaceInfo(place, marker);
         });
 
-        // 목록 항목
         const item = document.createElement("button");
         item.className = "place-item";
 
@@ -463,8 +513,7 @@
         name.textContent = (index + 1) + ". " + place.place_name;
 
         const category = document.createElement("span");
-        category.textContent =
-          place.category_name || categoryNameFallback();
+        category.textContent = place.category_name || categoryName();
 
         const address = document.createElement("span");
         address.textContent =
@@ -486,19 +535,15 @@
       });
     }
 
-    function categoryNameFallback() {
+    function categoryName() {
       return currentCategory === "hospital" ? "병원" : "약국";
     }
 
-    // 정보창 표시
     function showPlaceInfo(place, marker) {
       const address =
         place.road_address_name ||
         place.address_name ||
         "주소 정보 없음";
-
-      const safeName = escapeHTML(place.place_name);
-      const safeAddress = escapeHTML(address);
 
       const mapUrl = place.place_url ||
         "https://map.kakao.com/link/search/" +
@@ -506,17 +551,17 @@
 
       const content = `
         <div class="info-window">
-          <strong>${safeName}</strong>
-          <p>주소: ${safeAddress}</p>
+          <strong>${escapeHTML(place.place_name)}</strong>
+          <p>주소: ${escapeHTML(address)}</p>
           <p>${
             currentCategory === "hospital"
               ? "응급실 운영 여부는 별도로 확인해 주세요."
-              : "운영시간과 조제 가능 여부를 확인해 주세요."
+              : "운영시간을 별도로 확인해 주세요."
           }</p>
           <a href="${escapeHTML(mapUrl)}"
              target="_blank"
              rel="noopener noreferrer">
-            카카오맵에서 상세 정보 보기 ↗
+            카카오맵 상세 정보 보기 ↗
           </a>
         </div>
       `;
@@ -525,7 +570,6 @@
       infoWindow.open(map, marker);
     }
 
-    // HTML 특수문자 처리
     function escapeHTML(value) {
       return String(value).replace(/[&<>"']/g, function(char) {
         return {
@@ -538,53 +582,47 @@
       });
     }
 
-    // 기존 마커 삭제
     function clearMarkers() {
       markers.forEach(function(marker) {
         marker.setMap(null);
       });
 
       markers = [];
-
-      if (infoWindow) {
-        infoWindow.close();
-      }
+      infoWindow.close();
     }
 
-    // 병원 / 약국 탭 전환
     function changeCategory(category) {
       currentCategory = category;
 
       document.getElementById("hospitalBtn").classList.toggle(
-        "active",
-        category === "hospital"
+        "active", category === "hospital"
       );
 
       document.getElementById("pharmacyBtn").classList.toggle(
-        "active",
-        category === "pharmacy"
+        "active", category === "pharmacy"
       );
 
-      searchNearbyPlaces();
+      // 기존 검색어는 유지한 채 탭에 맞게 다시 검색
+      searchPlaces();
     }
 
-    // 현재 위치로 이동
     function moveToMyLocation() {
-      requestCurrentLocation();
+      if (userPosition) {
+        map.setCenter(userPosition);
+        map.setLevel(5);
+        searchPlaces();
+      } else {
+        requestCurrentLocation();
+      }
     }
 
-    // 교통정보 켜기 / 끄기
     function toggleTraffic() {
       trafficEnabled = !trafficEnabled;
 
       if (trafficEnabled) {
-        map.addOverlayMapTypeId(
-          kakao.maps.MapTypeId.TRAFFIC
-        );
+        map.addOverlayMapTypeId(kakao.maps.MapTypeId.TRAFFIC);
       } else {
-        map.removeOverlayMapTypeId(
-          kakao.maps.MapTypeId.TRAFFIC
-        );
+        map.removeOverlayMapTypeId(kakao.maps.MapTypeId.TRAFFIC);
       }
 
       document.getElementById("trafficBtn").textContent =
