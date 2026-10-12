@@ -6,10 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>응급 의료 지도</title>
 
-  <dbebb8cfdf21e6d5fe4adcd94d3a027f>
-  <script
-    src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=dbebb8cfdf21e6d5fe4adcd94d3a027f&libraries=services">
-  </script>
+  <!-- 카카오 JavaScript 키 입력 -->
+  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=dbebb8cfdf21e6d5fe4adcd94d3a027f&libraries=services"></script>
 
   <style>
     * {
@@ -19,12 +17,12 @@
     body {
       margin: 0;
       font-family: Arial, "Malgun Gothic", sans-serif;
-      color: #24352f;
-      background: #f4f7f5;
+      color: #24372f;
+      background: #f3f7f4;
     }
 
     header {
-      padding: 22px 24px;
+      padding: 22px;
       color: white;
       background: #176b52;
     }
@@ -37,31 +35,31 @@
     header p {
       margin: 0;
       font-size: 14px;
-      opacity: 0.9;
+      line-height: 1.6;
     }
 
     .toolbar {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
-      padding: 16px 20px;
+      gap: 9px;
+      padding: 14px 18px;
       background: white;
-      border-bottom: 1px solid #e0e8e3;
+      border-bottom: 1px solid #dfe8e1;
     }
 
     button {
       padding: 11px 15px;
-      border: 1px solid #d5e2da;
+      border: 1px solid #d4e1d8;
       border-radius: 9px;
       background: white;
-      color: #315345;
+      color: #315747;
       font-size: 14px;
       cursor: pointer;
-      transition: 0.15s;
+      transition: background 0.2s, color 0.2s;
     }
 
     button:hover {
-      background: #edf6f0;
+      background: #eaf4ed;
     }
 
     button.active {
@@ -70,13 +68,18 @@
       border-color: #176b52;
     }
 
+    #pharmacyBtn.active {
+      background: #3476cf;
+      border-color: #3476cf;
+    }
+
     .main {
       display: grid;
-      grid-template-columns: 350px minmax(0, 1fr);
-      gap: 16px;
-      padding: 16px;
-      height: calc(100vh - 145px);
-      min-height: 500px;
+      grid-template-columns: 340px minmax(0, 1fr);
+      gap: 15px;
+      padding: 15px;
+      height: calc(100vh - 135px);
+      min-height: 480px;
     }
 
     .sidebar {
@@ -84,13 +87,13 @@
       flex-direction: column;
       min-height: 0;
       overflow: hidden;
-      border: 1px solid #e0e8e3;
-      border-radius: 14px;
       background: white;
+      border: 1px solid #e0e8e2;
+      border-radius: 13px;
     }
 
     .sidebar-heading {
-      padding: 18px;
+      padding: 17px;
       border-bottom: 1px solid #e8eee9;
     }
 
@@ -100,9 +103,9 @@
     }
 
     #status {
-      color: #65776d;
+      color: #65766b;
       font-size: 13px;
-      line-height: 1.5;
+      line-height: 1.6;
     }
 
     #results {
@@ -110,30 +113,30 @@
       padding: 8px;
     }
 
-    .hospital {
+    .place-item {
       display: block;
       width: 100%;
-      padding: 14px;
       margin-bottom: 7px;
+      padding: 13px;
       text-align: left;
       border: 1px solid transparent;
-      border-radius: 10px;
+      border-radius: 9px;
     }
 
-    .hospital:hover {
-      border-color: #cce3d5;
+    .place-item:hover {
+      border-color: #cfe2d4;
     }
 
-    .hospital strong {
+    .place-item strong {
       display: block;
-      margin-bottom: 7px;
-      color: #244b3b;
-      font-size: 15px;
+      margin-bottom: 6px;
+      color: #254b3b;
+      font-size: 14px;
     }
 
-    .hospital span {
+    .place-item span {
       display: block;
-      color: #64766b;
+      color: #68796e;
       font-size: 12px;
       line-height: 1.6;
     }
@@ -142,9 +145,9 @@
       position: relative;
       min-width: 0;
       overflow: hidden;
-      border: 1px solid #e0e8e3;
-      border-radius: 14px;
-      background: #e8eee9;
+      border: 1px solid #e0e8e2;
+      border-radius: 13px;
+      background: #e7eee8;
     }
 
     #map {
@@ -158,17 +161,17 @@
       bottom: 12px;
       left: 12px;
       max-width: calc(100% - 24px);
-      padding: 9px 12px;
+      padding: 10px 12px;
       border-radius: 8px;
       background: rgba(255, 255, 255, 0.95);
-      box-shadow: 0 2px 8px #00000015;
+      box-shadow: 0 2px 8px #0002;
       font-size: 12px;
-      line-height: 1.5;
+      line-height: 1.6;
     }
 
     .info-window {
-      width: 230px;
-      padding: 13px;
+      width: 225px;
+      padding: 12px;
       font-family: Arial, "Malgun Gothic", sans-serif;
     }
 
@@ -181,9 +184,9 @@
 
     .info-window p {
       margin: 5px 0;
-      color: #4b5d53;
+      color: #4e6055;
       font-size: 12px;
-      line-height: 1.5;
+      line-height: 1.6;
     }
 
     .info-window a {
@@ -201,8 +204,8 @@
       }
 
       .map-wrap {
-        height: 52vh;
-        min-height: 330px;
+        height: 50vh;
+        min-height: 300px;
         grid-row: 1;
       }
 
@@ -216,24 +219,26 @@
 <body>
   <header>
     <h1>🩺 응급 의료 지도</h1>
-    <p>주변 병원을 확인하고 신속한 이동을 위한 위치 정보를 확인하세요.</p>
+    <p>현재 위치 주변의 병원과 약국을 확인하고 교통정보를 살펴보세요.</p>
   </header>
 
   <nav class="toolbar">
-    <button id="allBtn" class="active" onclick="changeMode('all')">
-      전체 병원
+    <button id="hospitalBtn" class="active"
+      onclick="changeCategory('hospital')">
+      🏥 병원
     </button>
-    <button id="generalBtn" onclick="changeMode('general')">
-      종합병원
+
+    <button id="pharmacyBtn"
+      onclick="changeCategory('pharmacy')">
+      💊 약국
     </button>
+
     <button onclick="moveToMyLocation()">
       📍 내 위치
     </button>
+
     <button id="trafficBtn" onclick="toggleTraffic()">
       🚦 교통정보 켜기
-    </button>
-    <button onclick="searchHospitals()">
-      🔄 주변 병원 다시 검색
     </button>
   </nav>
 
@@ -241,7 +246,7 @@
     <section class="sidebar">
       <div class="sidebar-heading">
         <h2 id="listTitle">주변 병원</h2>
-        <div id="status">병원 정보를 불러오는 중입니다.</div>
+        <div id="status">현재 위치를 확인하고 있습니다.</div>
       </div>
       <div id="results"></div>
     </section>
@@ -249,101 +254,141 @@
     <section class="map-wrap">
       <div id="map"></div>
       <div class="map-note">
-        병원 마커를 누르면 주소와 카카오맵 링크를 확인할 수 있어요.
+        마커를 누르면 장소 정보와 카카오맵 링크를 확인할 수 있어요.
         응급실 운영 여부는 별도로 확인해야 합니다.
       </div>
     </section>
   </main>
 
   <script>
-    // 현재 선택한 탭
-    let currentMode = "all";
+    // 카테고리 코드
+    const CATEGORY_CODES = {
+      hospital: "HP8",
+      pharmacy: "PM9"
+    };
 
-    // 지도 및 장소 검색 객체
-    let map;
-    let placesService;
+    // 현재 상태
+    let currentCategory = "hospital";
+    let userPosition = null;
+    let trafficEnabled = false;
+    let searchVersion = 0;
+
+    let markers = [];
     let infoWindow;
 
-    // 지도에 표시한 마커와 검색 버전
-    let markers = [];
-    let searchVersion = 0;
-    let trafficEnabled = false;
-
-    // 내 위치를 저장할 변수
-    let userPosition = null;
-
-    // 기본 위치: 서울시청
+    // 위치를 가져오지 못했을 때 사용할 기본 위치: 서울시청
     const defaultPosition = new kakao.maps.LatLng(
       37.5665,
       126.9780
     );
 
     // 지도 초기화
-    map = new kakao.maps.Map(document.getElementById("map"), {
-      center: defaultPosition,
-      level: 5
-    });
+    const map = new kakao.maps.Map(
+      document.getElementById("map"),
+      {
+        center: defaultPosition,
+        level: 5
+      }
+    );
 
-    // ★ 지도 SDK의 HP8 카테고리 검색을 사용합니다.
-    // 키워드 검색(keywordSearch)은 사용하지 않습니다.
-    placesService = new kakao.maps.services.Places(map);
+    const placesService = new kakao.maps.services.Places(map);
 
     infoWindow = new kakao.maps.InfoWindow({
       zIndex: 10
     });
 
-    // 시작할 때 병원 검색
-    searchHospitals();
+    // 페이지 시작 시 현재 위치 확인
+    requestCurrentLocation();
 
-    // 병원 카테고리 검색
-    function searchHospitals() {
+    // 현재 위치 요청
+    function requestCurrentLocation() {
+      setStatus("현재 위치를 확인하고 있습니다.");
+
+      if (!navigator.geolocation) {
+        setStatus("위치 기능을 지원하지 않아 서울시청을 기준으로 검색합니다.");
+        searchNearbyPlaces();
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          userPosition = new kakao.maps.LatLng(
+            position.coords.latitude,
+            position.coords.longitude
+          );
+
+          map.setCenter(userPosition);
+          map.setLevel(5);
+
+          searchNearbyPlaces();
+        },
+        function(error) {
+          console.warn("위치 확인 실패:", error);
+
+          setStatus(
+            "현재 위치를 가져오지 못해 서울시청을 기준으로 검색합니다."
+          );
+
+          map.setCenter(defaultPosition);
+          searchNearbyPlaces();
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000
+        }
+      );
+    }
+
+    // 현재 위치 주변 병원 또는 약국 검색
+    function searchNearbyPlaces() {
       const version = ++searchVersion;
-      const center = map.getCenter();
 
-      document.getElementById("status").textContent =
-        "HP8 병원 카테고리로 검색 중입니다...";
+      const center = userPosition || map.getCenter();
+      const categoryCode = CATEGORY_CODES[currentCategory];
+
+      const categoryName =
+        currentCategory === "hospital" ? "병원" : "약국";
+
+      clearMarkers();
+
       document.getElementById("results").innerHTML = "";
+      document.getElementById("listTitle").textContent =
+        "주변 " + categoryName;
 
+      setStatus(categoryName + "을(를) 검색하고 있습니다...");
+
+      // 핵심: 선택한 탭에 해당하는 카테고리 코드만 검색
       placesService.categorySearch(
-        "HP8",
+        categoryCode,
         function(data, status, pagination) {
-          // 이전 검색 결과가 늦게 도착한 경우 무시
+          // 이전 검색의 응답은 표시하지 않음
           if (version !== searchVersion) return;
 
           if (status === kakao.maps.services.Status.OK) {
-            console.log("HP8 카테고리 검색 성공", data);
+            console.log(
+              categoryName + " 카테고리 코드:",
+              categoryCode
+            );
+            console.log("검색 결과:", data);
 
-            let filtered = data;
+            displayPlaces(data, version);
 
-            // 종합병원 탭에서는 분류 정보에 '종합병원'이 있는
-            // 결과만 보여줍니다.
-            if (currentMode === "general") {
-              filtered = data.filter(function(place) {
-                return (place.category_name || "")
-                  .includes("종합병원");
-              });
-            }
-
-            displayPlaces(filtered, version);
-
-            if (filtered.length === 0) {
-              document.getElementById("status").textContent =
-                currentMode === "general"
-                  ? "이 검색 범위에서 종합병원 분류 결과를 찾지 못했습니다. 지도를 이동하거나 전체 병원 탭을 확인해 보세요."
-                  : "이 검색 범위에서 병원 결과를 찾지 못했습니다. 지도를 이동한 뒤 다시 검색해 보세요.";
-            } else {
-              document.getElementById("status").textContent =
-                "HP8 병원 검색 결과 " + filtered.length +
-                "곳 · 검색 반경 약 10km";
-            }
-          } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
-            clearMarkers();
-            document.getElementById("status").textContent =
-              "이 주변에서 검색된 병원이 없습니다.";
+            setStatus(
+              "검색 결과 " + data.length + "곳 · 반경 약 10km"
+            );
+          } else if (
+            status === kakao.maps.services.Status.ZERO_RESULT
+          ) {
+            setStatus(
+              "주변 10km에서 검색 결과를 찾지 못했습니다."
+            );
           } else {
-            console.error("HP8 검색 실패:", status);
-            document.getElementById("status").textContent =
-              "검색에 실패했습니다. API 키와 등록된 사이트 도메인을 확인해 주세요.";
+            console.error("카테고리 검색 실패:", status);
+
+            setStatus(
+              "검색에 실패했습니다. API 키와 사이트 등록 설정을 확인해 주세요."
+            );
           }
         },
         {
@@ -356,14 +401,15 @@
       );
     }
 
-    // 마커 및 목록 표시
+    // 지도 마커와 목록 생성
     function displayPlaces(places, version) {
       if (version !== searchVersion) return;
 
-      clearMarkers();
-
       const results = document.getElementById("results");
       results.innerHTML = "";
+
+      const isHospital = currentCategory === "hospital";
+      const markerColor = isHospital ? "#16815c" : "#3476cf";
 
       places.forEach(function(place, index) {
         const position = new kakao.maps.LatLng(
@@ -371,63 +417,54 @@
           Number(place.x)
         );
 
-        // 전체 병원은 초록색, 종합병원은 파란색
-        const markerColor =
-          currentMode === "general" ? "#2867d8" : "#16815c";
-
         const marker = new kakao.maps.Marker({
           map: map,
           position: position,
           title: place.place_name
         });
 
-        // 마커 디자인
-        const markerContent = document.createElement("div");
-        markerContent.style.cssText = `
-          width: 32px;
-          height: 32px;
-          border-radius: 50%;
-          background: ${markerColor};
-          color: white;
-          border: 2px solid white;
-          box-shadow: 0 2px 7px #0004;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 18px;
-          font-weight: bold;
+        // 병원과 약국을 색상으로 구분
+        const svg = `
+          <svg xmlns="http://www.w3.org/2000/svg"
+               width="36" height="36" viewBox="0 0 36 36">
+            <circle cx="18" cy="18" r="15"
+                    fill="${markerColor}"
+                    stroke="white" stroke-width="3"/>
+            ${
+              isHospital
+                ? '<path d="M15 9h6v6h6v6h-6v6h-6v-6H9v-6h6z" fill="white"/>'
+                : '<path d="M12 9h12v18H12z" fill="white"/><path d="M9 15h18v6H9z" fill="white"/>'
+            }
+          </svg>
         `;
-        markerContent.textContent = "+";
 
-        marker.setImage(new kakao.maps.MarkerImage(
-          "data:image/svg+xml;charset=utf-8," +
-          encodeURIComponent(
-            `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36">
-              <circle cx="18" cy="18" r="15" fill="${markerColor}" stroke="white" stroke-width="3"/>
-              <path d="M15 9h6v6h6v6h-6v6h-6v-6H9v-6h6z" fill="white"/>
-            </svg>`
-          ),
-          new kakao.maps.Size(36, 36),
-          { offset: new kakao.maps.Point(18, 18) }
-        ));
+        marker.setImage(
+          new kakao.maps.MarkerImage(
+            "data:image/svg+xml;charset=utf-8," +
+              encodeURIComponent(svg),
+            new kakao.maps.Size(36, 36),
+            {
+              offset: new kakao.maps.Point(18, 18)
+            }
+          )
+        );
 
         markers.push(marker);
 
-        // 병원 정보창
         kakao.maps.event.addListener(marker, "click", function() {
-          showHospitalInfo(place, marker);
+          showPlaceInfo(place, marker);
         });
 
-        // 병원 목록 항목
+        // 목록 항목
         const item = document.createElement("button");
-        item.className = "hospital";
+        item.className = "place-item";
 
         const name = document.createElement("strong");
         name.textContent = (index + 1) + ". " + place.place_name;
 
         const category = document.createElement("span");
         category.textContent =
-          place.category_name || "병원";
+          place.category_name || categoryNameFallback();
 
         const address = document.createElement("span");
         address.textContent =
@@ -442,18 +479,19 @@
         item.addEventListener("click", function() {
           map.panTo(position);
           map.setLevel(3);
-          showHospitalInfo(place, marker);
+          showPlaceInfo(place, marker);
         });
 
         results.appendChild(item);
       });
-
-      document.getElementById("listTitle").textContent =
-        currentMode === "general" ? "종합병원 목록" : "주변 병원 목록";
     }
 
-    // 병원 정보창 표시
-    function showHospitalInfo(place, marker) {
+    function categoryNameFallback() {
+      return currentCategory === "hospital" ? "병원" : "약국";
+    }
+
+    // 정보창 표시
+    function showPlaceInfo(place, marker) {
       const address =
         place.road_address_name ||
         place.address_name ||
@@ -462,7 +500,6 @@
       const safeName = escapeHTML(place.place_name);
       const safeAddress = escapeHTML(address);
 
-      // 카카오맵 장소 상세 페이지로 연결
       const mapUrl = place.place_url ||
         "https://map.kakao.com/link/search/" +
         encodeURIComponent(place.place_name);
@@ -471,7 +508,11 @@
         <div class="info-window">
           <strong>${safeName}</strong>
           <p>주소: ${safeAddress}</p>
-          <p>응급실 운영 여부: 별도 확인 필요</p>
+          <p>${
+            currentCategory === "hospital"
+              ? "응급실 운영 여부는 별도로 확인해 주세요."
+              : "운영시간과 조제 가능 여부를 확인해 주세요."
+          }</p>
           <a href="${escapeHTML(mapUrl)}"
              target="_blank"
              rel="noopener noreferrer">
@@ -484,7 +525,7 @@
       infoWindow.open(map, marker);
     }
 
-    // HTML 삽입 시 문자 처리
+    // HTML 특수문자 처리
     function escapeHTML(value) {
       return String(value).replace(/[&<>"']/g, function(char) {
         return {
@@ -497,62 +538,42 @@
       });
     }
 
-    // 기존 마커 제거
+    // 기존 마커 삭제
     function clearMarkers() {
       markers.forEach(function(marker) {
         marker.setMap(null);
       });
 
       markers = [];
-      infoWindow.close();
+
+      if (infoWindow) {
+        infoWindow.close();
+      }
     }
 
-    // 탭 전환
-    function changeMode(mode) {
-      currentMode = mode;
+    // 병원 / 약국 탭 전환
+    function changeCategory(category) {
+      currentCategory = category;
 
-      document.getElementById("allBtn").classList.toggle(
-        "active", mode === "all"
+      document.getElementById("hospitalBtn").classList.toggle(
+        "active",
+        category === "hospital"
       );
 
-      document.getElementById("generalBtn").classList.toggle(
-        "active", mode === "general"
+      document.getElementById("pharmacyBtn").classList.toggle(
+        "active",
+        category === "pharmacy"
       );
 
-      searchHospitals();
+      searchNearbyPlaces();
     }
 
     // 현재 위치로 이동
     function moveToMyLocation() {
-      if (!navigator.geolocation) {
-        alert("이 브라우저에서는 위치 기능을 사용할 수 없습니다.");
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(
-        function(position) {
-          userPosition = new kakao.maps.LatLng(
-            position.coords.latitude,
-            position.coords.longitude
-          );
-
-          map.setCenter(userPosition);
-          map.setLevel(5);
-          searchHospitals();
-        },
-        function() {
-          alert(
-            "현재 위치를 가져오지 못했습니다. 브라우저의 위치 권한을 확인해 주세요."
-          );
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000
-        }
-      );
+      requestCurrentLocation();
     }
 
-    // 교통정보 레이어 켜기 / 끄기
+    // 교통정보 켜기 / 끄기
     function toggleTraffic() {
       trafficEnabled = !trafficEnabled;
 
@@ -570,6 +591,10 @@
         trafficEnabled
           ? "🚦 교통정보 끄기"
           : "🚦 교통정보 켜기";
+    }
+
+    function setStatus(message) {
+      document.getElementById("status").textContent = message;
     }
   </script>
 </body>
